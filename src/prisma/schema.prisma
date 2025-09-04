@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  OWNER
+  AGENT
+}
+
+enum SenderType {
+  AGENT
+  VISITOR
+}
+
+model Company {
+  id            Int            @id @default(autoincrement())
+  uid           String         @unique
+  name          String
+  domain        String
+  apiKey        String         @unique
+  agents        Agent[]
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+
+  @@map("companies")
+}
+
+model Agent {
+  id        Int      @id @default(autoincrement())
+  uid       String   @unique
+  email     String   @unique
+  password  String
+  role      Role
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("agents")
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  uid       String    @unique
+  companyId Int
+  company   Company   @relation(fields: [companyId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  uid            String       @unique
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderType     SenderType
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@map("messages")
+}
